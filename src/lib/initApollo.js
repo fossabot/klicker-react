@@ -2,7 +2,10 @@
 // https://github.com/zeit/next.js/blob/canary/examples/with-apollo/lib/initApollo.js
 
 import { ApolloClient } from 'apollo-client'
+import { ApolloLink } from 'apollo-link'
 import { HttpLink } from 'apollo-link-http'
+import { onError } from 'apollo-link-error'
+import Router from 'next/router'
 // import { createPersistedQueryLink } from 'apollo-link-persisted-queries'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import fetch from 'isomorphic-unfetch'
@@ -42,10 +45,27 @@ function create(initialState) {
     dataIdFromObject: o => o.id,
   }).restore(initialState || {})
 
-  const link = new HttpLink({
-    credentials: 'include', // Additional fetch() options like `credentials` or `headers`
-    uri: process.env.API_URL || 'http://localhost:4000/graphql',
-  })
+  const link = ApolloLink.from([
+    onError(({ graphQLErrors, networkError }) => {
+      if (graphQLErrors) {
+        const messages = graphQLErrors.map(e => e.message)
+        console.log(messages)
+        if (messages.includes('INVALID_LOGIN')) {
+          if (typeof window !== 'undefined') {
+            Router.push('/user/login')
+          }
+        }
+      }
+
+      if (networkError) {
+        console.log(networkError)
+      }
+    }),
+    new HttpLink({
+      credentials: 'include', // Additional fetch() options like `credentials` or `headers`
+      uri: process.env.API_URL || 'http://localhost:4000/graphql',
+    }),
+  ])
 
   /* const persistQueriesLink = createPersistedQueryLink({
     // we need to pass both disable and generateHash (or it will bug)
