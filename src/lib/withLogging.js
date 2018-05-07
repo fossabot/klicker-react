@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { initGA, logPageView, logException } from '.'
-import dynamic from 'next/dynamic'
 
 let Raven
 let LogRocket
@@ -37,7 +36,7 @@ export default (cfg = {}) =>
       componentDidMount() {
         if (typeof window !== 'undefined') {
           if (isDev && !window.INIT_PERF) {
-            const { registerObserver } = dynamic(import('react-perf-devtool'))
+            const { registerObserver } = require('react-perf-devtool')
 
             // setup react-perf-devtool
             registerObserver()
