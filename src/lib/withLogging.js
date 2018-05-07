@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { initGA, logPageView, logException } from '.'
+import dynamic from 'next/dynamic'
 
 let Raven
 let LogRocket
