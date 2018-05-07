@@ -1,19 +1,11 @@
 /* eslint-disable */
 
 import React from 'react'
-import { registerObserver } from 'react-perf-devtool'
 import { initGA, logPageView, logException } from '.'
 
 let Raven
 let LogRocket
 let LogRocketReact
-if (process.env.SENTRY_DSN) {
-  Raven = require('raven-js')
-}
-if (process.env.LOGROCKET) {
-  LogRocket = require('logrocket')
-  LogRocketReact = require('logrocket-react')
-}
 
 export default (cfg = {}) =>
   function withLogging(Child) {
@@ -44,6 +36,8 @@ export default (cfg = {}) =>
       componentDidMount() {
         if (typeof window !== 'undefined') {
           if (isDev && !window.INIT_PERF) {
+            const { registerObserver } = dynamic(import('react-perf-devtool'))
+
             // setup react-perf-devtool
             registerObserver()
 
@@ -65,6 +59,9 @@ export default (cfg = {}) =>
 
           // embed logrocket if enabled
           if (isProd && process.env.LOGROCKET && config.logRocket && !window.INIT_LR) {
+            LogRocket = require('logrocket')
+            LogRocketReact = require('logrocket-react')
+
             LogRocket.init(process.env.LOGROCKET)
             LogRocketReact(LogRocket)
 
@@ -73,6 +70,7 @@ export default (cfg = {}) =>
 
           // embed sentry if enabled
           if (isProd && config.sentry && Raven && !window.INIT_RAVEN) {
+            Raven = require('raven-js')
             Raven.config(process.env.SENTRY_DSN, {
               environment: process.env.NODE_ENV,
               release: process.env.VERSION,
